@@ -2,6 +2,7 @@ package com.banco.application.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -150,21 +151,9 @@ public class AperturaCuentaService {
     }
 
     private TransaccionId generarIdTransaccion() {
-    // Formato requerido: TXN-2024-0000001
-    // Estructura: TXN-AAAA-NNNNNNN (7 dígitos)
-
     int año = java.time.Year.now().getValue();
-
-    //Asegura 7 dígitos
-    long timestamp = System.currentTimeMillis();
-    long secuencia = timestamp % 10000000L;
-
-    String id = String.format("TXN-%d-%07d", año, secuencia);
-
-    System.out.println("ID generado: " + id + " (longitud: " + id.length() + ")");
-
+    String id = "TXN-" + año + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
     return new TransaccionId(id);
-
     }
 
     public void cerrarCuenta(String cuentaString){

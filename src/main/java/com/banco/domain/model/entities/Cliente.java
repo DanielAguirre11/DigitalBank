@@ -87,8 +87,6 @@ public class Cliente {
     public void eliminarCuenta(CuentaId cuentaId){
 
         if(!cuentas.remove(cuentaId)) throw new IllegalArgumentException("La cuenta no se ecuentra asociada a este cliente");
-
-        cuentas.remove(cuentaId);
     }
 
         public void validarTransferenciaEntrePropiasCuentas(CuentaId cuentaOrigenId, CuentaId cuentaDestinoId) {

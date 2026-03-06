@@ -3,6 +3,7 @@ package com.banco.application.services;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -264,10 +265,7 @@ public class TransaccionService {
 
     //GENERAR ID DE TRANSACCIÓN
     private TransaccionId generarTransaccionId() {
-    
-    int randomNum = (int)(Math.random() * 10000000);
-    String id = "TXN-" + LocalDateTime.now().getYear() + "-" + 
-    String.format("%07d", randomNum);
+    String id = "TXN-" + LocalDateTime.now().getYear() + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
     return new TransaccionId(id);
     }
 
@@ -355,7 +353,7 @@ public class TransaccionService {
 
         if(request == null) throw new IllegalArgumentException("La solicitud no puede ser nula");
 
-        if(request.getMonto() == null && request.getMonto().compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException(
+        if(request.getMonto() == null || request.getMonto().compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException(
             "El monto debe ser positivo");
         
         if(request.getCuentaOrigen() == null || request.getCuentaDestino() == null) throw new IllegalArgumentException(

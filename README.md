@@ -1,5 +1,5 @@
 # DigitalBank
-# 💻 Configuracion Git
+## 💻 Configuracion Git
 ### Para configurar tu nombre y email en Git, ejecuta estos comandos en tu terminal:
 Configuración global (aplica a todos tus repositorios):
 ```
@@ -16,19 +16,36 @@ Para verificar que quedó guardado correctamente:
 ```
 git config --list
 ```
+---
+---
 
-# Pasos compilacion
+## 🏛️Plan: Hacer Funcionar el Sistema Bancario Digital
 
-Pasos para hacer funcionar el proyecto
-Prerequisitos
-```
-java -version    # Necesita Java 17+
-mvn -version     # Maven 3.8+
-```
-#### Paso 1 — Levantar PostgreSQL
-El proyecto espera PostgreSQL en el puerto 8181 (no estándar). La opción más rápida es con Docker:
+### Tecnologías
+- **Java 17** | **Spring Boot 3.5.7** | **PostgreSQL** | **Maven**
 
-```
+---
+
+### Prerequisitos
+
+Verificar que tengas instalado:
+
+| Herramienta | Versión mínima | Comando de verificación |
+|-------------|----------------|------------------------|
+| Java JDK    | 17+            | `java -version`        |
+| Maven       | 3.8+           | `mvn -version`         |
+| PostgreSQL  | 12+            | `psql --version`       |
+| Docker      | Cualquiera     | `docker --version`     |
+
+---
+
+### 📦 Paso 1 — Levantar la Base de Datos
+
+El proyecto espera **PostgreSQL en el puerto 8181** (no estándar).
+
+#### Opción A — Docker (recomendado)
+
+```bash
 docker run --name banco-db \
   -e POSTGRES_USER=postgres \
   -e POSTGRES_PASSWORD=balbuena022000 \
@@ -36,41 +53,155 @@ docker run --name banco-db \
   -p 8181:5432 \
   -d postgres:15
 ```
-Si ya tienes PostgreSQL instalado, crea la base de datos y ajusta el puerto en application.properties:
 
+#### Opción B — PostgreSQL nativo
+
+1. Instalar PostgreSQL desde https://www.postgresql.org/download/
+2. Cambiar el puerto a `8181` en `postgresql.conf`
+3. Crear la base de datos:
+
+```sql
+CREATE DATABASE banco_db;
 ```
-spring.datasource.url=jdbc:postgresql://localhost:TU_PUERTO/banco_db
+> Se mantiene el puerto default: **5432**
+---
+
+### ⚙️ Paso 2 — Verificar Configuración
+
+Archivo: `src/main/resources/application.properties`
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:8181/banco_db
+spring.datasource.username=postgres
+spring.datasource.password=balbuena022000
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 ```
-#### 🚀 Paso 2 — Compilar y ejecutar
-```
+
+> Hibernate crea las tablas automáticamente al primer arranque.
+> No hay scripts SQL que ejecutar manualmente.
+
+---
+
+### 🚀 Paso 3 — Compilar y Ejecutar
+
+```bash
+# Desde la raíz del proyecto (donde está el pom.xml)
 mvn clean compile
+
+# Arrancar la aplicación
 mvn spring-boot:run -DskipTests
 ```
-La app arranca en http://localhost:8080. Hibernate crea las tablas automáticamente, no hay scripts SQL que ejecutar.
 
-#### Paso 3 — Probar endpoints
+La aplicación estará disponible en: **http://localhost:8080**
 
-# Crear un cliente
-```
+---
+
+### 📝 Paso 4 — Verificar que Funciona
+
+#### Crear un cliente (POST)
+
+```bash
 curl -X POST http://localhost:8080/api/clientes \
   -H "Content-Type: application/json" \
   -d '{"nombre": "Juan Pérez", "email": "juan@test.com"}'
 ```
----
-#### Corrección aplicada
-Bug en Cliente.java:67: `email == ""` (comparación de referencia siempre falsa en Java) — corregido a `email.isEmpty()`.
+
+#### Consultar un cliente (GET)
+
+```bash
+curl http://localhost:8080/api/clientes/{clienteId}
+```
 
 ---
-#### Problemas adicionales a tener en cuenta
-| Prioridad | Problema                                                                |
-| --------- | ----------------------------------------------------------------------- |
-| ALTA      | Las credenciales de BD están en texto plano en `application.properties` |
-| ALTA      | No hay manejo global de excepciones (`@ControllerAdvice`)               |
-| MEDIA     | Usa `System.out.println` en lugar de un logger (SLF4J)                  |
-| BAJA      | No tiene Spring Security (todos los endpoints son públicos)             |
+### 🔗 Endpoints Disponibles
+
+#### Clientes — `/api/clientes`
+
+| Método   | Ruta                  | Descripción          |
+|----------|-----------------------|----------------------|
+| `POST`   | `/api/clientes`       | Crear cliente        |
+| `GET`    | `/api/clientes/{id}`  | Obtener cliente      |
+| `PUT`    | `/api/clientes/{id}`  | Actualizar cliente   |
+| `DELETE` | `/api/clientes/{id}`  | Desactivar cliente   |
+
+#### Cuentas — `/api/cuentas`
+
+| Método   | Ruta                       | Descripción      |
+|----------|----------------------------|------------------|
+| `POST`   | `/api/cuentas`             | Abrir cuenta     |
+| `GET`    | `/api/cuentas/{id}/saldo`  | Consultar saldo  |
+| `DELETE` | `/api/cuentas/{id}`        | Cerrar cuenta    |
+
+#### Transacciones — `/api/transacciones`
+
+| Método | Ruta                                | Descripción     |
+|--------|-------------------------------------|-----------------|
+| `POST` | `/api/transacciones/transferencia`  | Transferencia   |
+| `POST` | `/api/transacciones/deposito`       | Depósito        |
+| `POST` | `/api/transacciones/retiro`         | Retiro          |
+| `GET`  | `/api/transacciones/{cuentaId}`     | Ver movimientos |
 
 ---
-🛠️ ANEXOS
+
+### ✅ Paso 5 — (Opcional) Ejecutar Tests
+
+Los tests de dominio usan **H2 en memoria**, no necesitan PostgreSQL.
+
+```bash
+mvn test
+```
+
+---
+
+### 🛠️Correcciones Aplicadas al Código
+
+| Archivo | Línea | Error original | Corrección |
+|---------|-------|----------------|------------|
+| `Cliente.java` | 67 | `email == ""` (comparación de referencia) | `email.isEmpty()` |
+
+---
+
+### 🔄 Problemas Conocidos
+
+| Prioridad | Problema | Impacto |
+|-----------|---------|---------|
+| 🔴 ALTA   | Credenciales en texto plano en `application.properties` | Seguridad |
+| 🔴 ALTA   | Sin manejo global de excepciones (`@ControllerAdvice`) | Errores inconsistentes |
+| 🟡 MEDIA  | `System.out.println` en lugar de logger SLF4J | Dificulta diagnóstico |
+| 🟢 BAJA   | Sin Spring Security | Endpoints públicos sin autenticación |
+
+---
+
+### 🎯 Checklist de Verificación Final
+
+- [ ] PostgreSQL corriendo en `localhost:8181`
+- [ ] Base de datos `banco_db` creada
+- [ ] `mvn spring-boot:run -DskipTests` arranca sin errores
+- [ ] `POST /api/clientes` responde con `200` o `201`
+- [ ] Las tablas se crearon automáticamente en la BD
+
+---
+### 📋 Documentacion APIs
+La URL de Swagger UI con SpringDoc es:
+`http://localhost:8080/swagger-ui/index.html`
+
+Y el JSON de la especificación OpenAPI en:
+`http://localhost:8080/v3/api-docs`
+
+No hay `server.port` configurado, así que usa el puerto por defecto **8080**. Una vez ejecutado el proyecto, accedes en:
+`http://localhost:8080/swagger-ui/index.html`
+
+Ahí verás los 3 grupos de endpoints documentados con las anotaciones `@Tag` y `@Operation` que ya tienes en los controllers:
+
+- Clientes — `api/clientes`
+- Cuentas — `api/cuentas`
+- Transacciones — `api/transacciones`
+
+---
+---
+### 🛠️ ANEXOS
 
 Listas: 🧩✅⚠️❌❗📌🔹🔄🛠️→🛑
 

@@ -2,6 +2,8 @@ package com.banco.infrastructure.controllers;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.banco.application.dto.MovimientoDTO;
 import com.banco.application.dto.OperacionCuentaRequest;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 
 
+@Tag(name = "Transacciones", description = "Operaciones bancarias: transferencias, depositos, retiros y reversiones")
 @RestController
 @RequestMapping("api/transacciones")
 public class TransaccionController {
@@ -39,6 +42,7 @@ public class TransaccionController {
     }
 
     
+    @Operation(summary = "Transferir fondos", description = "Realiza una transferencia entre dos cuentas")
     @PostMapping("/transferir")
     public ResponseEntity<TransferenciaResponse> transferir(@Valid @RequestBody TransferenciaRequest request){
 
@@ -52,6 +56,7 @@ public class TransaccionController {
         }
     }
 
+    @Operation(summary = "Depositar", description = "Realiza un deposito en una cuenta")
     @PostMapping("/deposito")
     public ResponseEntity<OperacionCuentaResponse> depositar(@Valid @RequestBody OperacionCuentaRequest request){
 
@@ -79,6 +84,7 @@ public class TransaccionController {
         }
     }
 
+    @Operation(summary = "Retirar fondos", description = "Realiza un retiro de una cuenta")
     @PostMapping("/retiro")
     public ResponseEntity<OperacionCuentaResponse> retiro(@Valid @RequestBody OperacionCuentaRequest request){
 
@@ -104,6 +110,7 @@ public class TransaccionController {
         }
     }
 
+    @Operation(summary = "Revertir transaccion", description = "Revierte una transaccion realizada (maximo 30 dias)")
     @PostMapping("/{transaccionId}/revertir")
     public ResponseEntity<OperacionCuentaResponse> revertir(@PathVariable String transaccionId){
 
@@ -126,6 +133,7 @@ public class TransaccionController {
         }
     }
 
+    @Operation(summary = "Ver movimientos", description = "Consulta el historial de movimientos de una cuenta")
     @GetMapping("/{cuentaStringId}/movimientos")
     public ResponseEntity<?> obtenerMovimientos(@PathVariable String cuentaStringId){
 

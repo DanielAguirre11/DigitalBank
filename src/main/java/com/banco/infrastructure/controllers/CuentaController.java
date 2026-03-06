@@ -2,6 +2,8 @@ package com.banco.infrastructure.controllers;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.banco.application.dto.AperturaCuentaRequest;
 import com.banco.application.dto.AperturaCuentaResponse;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 
 
+@Tag(name = "Cuentas", description = "Gestion de cuentas bancarias: apertura, consulta de saldo y cierre")
 @RestController
 @RequestMapping("api/cuentas")
 public class CuentaController {
@@ -44,6 +47,7 @@ public class CuentaController {
     }
 
 
+    @Operation(summary = "Abrir cuenta", description = "Crea una nueva cuenta bancaria para un cliente")
     @PostMapping()
     public ResponseEntity<AperturaCuentaResponse> abrirCuenta(@Valid @RequestBody AperturaCuentaRequest request){
 
@@ -61,6 +65,7 @@ public class CuentaController {
             "Cuenta creada exitosamente"));
     }
 
+    @Operation(summary = "Consultar saldo", description = "Consulta el saldo actual de una cuenta")
     @GetMapping()
     public ResponseEntity<ConsultaSaldoResponse> consultaSaldo(@Valid @RequestBody ConsultaSaldoRequest request){
 
@@ -71,6 +76,7 @@ public class CuentaController {
         .ok(response);
     }
 
+    @Operation(summary = "Cerrar cuenta", description = "Cierra una cuenta bancaria existente")
     @DeleteMapping("/{cuentaStringId}")
     public ResponseEntity<?> cerrarCuentas(@PathVariable String cuentaStringId){
 
@@ -85,6 +91,7 @@ public class CuentaController {
         }
     }
 
+    @Operation(summary = "Reactivar cuenta", description = "Reactiva una cuenta previamente cerrada")
     @PostMapping("/{cuentaStringId}")
     public ResponseEntity<Void> abrirCuenta(@PathVariable String cuentaStringId){
 
