@@ -70,12 +70,12 @@ public class TransaccionController {
 
             
             return ResponseEntity.ok().body(new OperacionCuentaResponse(
-                transaccion.getId().getValor(), 
-                transaccion.getEstado().name(), 
+                transaccion.getId().getValor(),
+                transaccion.getEstado().name(),
                 transaccion.getMonto().getMonto(),
-                transaccion.getMonto().getMoneda().getNombre(), 
-                transaccion.getFechaCreacion(), 
-                transaccion.getCuentaOrigen() != null ? transaccion.getCuentaOrigen().getValor() : null, 
+                transaccion.getMonto().getMoneda().getNombre(),
+                transaccion.getFechaCreacion(),
+                transaccion.getCuentaDestino() != null ? transaccion.getCuentaDestino().getValor() : null,
                 transaccion.getTipo().name(), "Deposito exitoso"));
 
         } catch (Exception e) {

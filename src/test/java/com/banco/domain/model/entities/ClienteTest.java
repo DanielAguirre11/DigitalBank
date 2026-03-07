@@ -56,7 +56,7 @@ class ClienteTest {
             CuentaId.newCuentaId("ARG0170000000000000000001")
         );
         
-        Cliente cliente = new Cliente(clienteId, nombre, email, false, cuentas);
+        Cliente cliente = new Cliente(clienteId, nombre, email, false, cuentas, null, null);
         
         assertThat(cliente.getActiva()).isFalse();
         assertThat(cliente.getCuentas()).hasSize(2);
@@ -162,7 +162,7 @@ class ClienteTest {
         @Test
         @DisplayName("agregarCuenta() cliente inactivo - Debe lanzar excepción")
         void agregarCuenta_ClienteInactivo_DebeLanzarExcepcion() {
-            Cliente cliente = new Cliente(clienteId, nombre, email, false, new ArrayList<>());
+            Cliente cliente = new Cliente(clienteId, nombre, email, false, new ArrayList<>(), null, null);
             CuentaId cuentaId = CuentaId.newCuentaId("ARG0170000000000000000000");
             
             assertThatThrownBy(() -> cliente.agregarCuenta(cuentaId))
@@ -224,7 +224,7 @@ class ClienteTest {
         @Test
         @DisplayName("activar() cliente inactivo - Debe cambiar a activo")
         void activar_ClienteInactivo_DebeCambiarAActivo() {
-            Cliente cliente = new Cliente(clienteId, nombre, email, false, new ArrayList<>());
+            Cliente cliente = new Cliente(clienteId, nombre, email, false, new ArrayList<>(), null, null);
             
             cliente.activar();
             
@@ -367,7 +367,7 @@ class ClienteTest {
         @Test
         @DisplayName("validarTransferenciaEntrePropiasCuentas() cliente inactivo - Debe rechazar")
         void validarTransferenciaEntrePropiasCuentas_ClienteInactivo_DebeRechazar() {
-            Cliente cliente = new Cliente(clienteId, nombre, email, false, new ArrayList<>());
+            Cliente cliente = new Cliente(clienteId, nombre, email, false, new ArrayList<>(), null, null);
             CuentaId cuentaOrigenId = CuentaId.newCuentaId("ARG0170000000000000000000");
             CuentaId cuentaDestinoId = CuentaId.newCuentaId("ARG0170000000000000000001");
             

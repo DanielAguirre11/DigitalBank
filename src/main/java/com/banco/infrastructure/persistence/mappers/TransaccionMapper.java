@@ -42,11 +42,11 @@ public class TransaccionMapper {
             cuentaDestino = CuentaId.newCuentaId(entity.getCuentaDestinoId());
         }
 
-        //CREAMOS LA TRANSACCION 
+        //CREAMOS LA TRANSACCION
         Transaccion transaccion = new Transaccion(
-            transaccionId, 
-            tipoTransaccion, 
-            cuentaOrigen, 
+            transaccionId,
+            tipoTransaccion,
+            cuentaOrigen,
             cuentaDestino,
             fechaDeCreacion,
             estado,
@@ -54,8 +54,8 @@ public class TransaccionMapper {
             monto,
             entity.getDescripcion());
 
-        // MODIFICAMOS EL ESTADO A PENDIENTE
- 
+        transaccion.setSaldoPosterior(entity.getSaldoPosterior());
+
         return transaccion;
     }
 
@@ -78,7 +78,8 @@ public class TransaccionMapper {
         transaccionExistente.setFechaDeCreacion(dominio.getFechaCreacion());
         transaccionExistente.setReferencia(dominio.getReferencia());
         transaccionExistente.setEstado(dominio.getEstado());
-        
+        transaccionExistente.setSaldoPosterior(dominio.getSaldoPosterior());
+
     if(dominio.getCuentaOrigen() != null) {
         transaccionExistente.setCuentaOrigenId(dominio.getCuentaOrigen().getValor());
     } else {

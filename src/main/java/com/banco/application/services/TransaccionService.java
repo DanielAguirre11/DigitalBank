@@ -90,6 +90,7 @@ public class TransaccionService {
                  descripcion != null ? descripcion : "Deposito");
 
             cuenta.depositar(dinero);
+            transaccion.setSaldoPosterior(cuenta.getSaldo().getMonto());
             transaccion.completar();
 
             cuentaRepository.actualizar(cuenta);
@@ -127,6 +128,7 @@ public class TransaccionService {
                  descripcion != null ? descripcion : "Retiro");
 
             cuenta.retirar(dinero);
+            transaccion.setSaldoPosterior(cuenta.getSaldo().getMonto());
             transaccion.completar();
 
             cuentaRepository.actualizar(cuenta);
@@ -238,6 +240,7 @@ public class TransaccionService {
             
             //ENTIDAD CUENTA HACE EL TRABAJO
             cuentaOrigen.transferir(monto, cuentaDestino);
+            transaccion.setSaldoPosterior(cuentaOrigen.getSaldo().getMonto());
             // MARCAR COMO COMPLETADA
             transaccion.completar();
             //GUARDAR CAMBIOS
@@ -300,15 +303,21 @@ public class TransaccionService {
 
     public MovimientoDTO convertirAmovimientoDto(Transaccion transaccion){
 
+        String cuentaContraparte = null;
+        if (transaccion.getTipo() == TipoTransaccion.TRANSFERENCIA) {
+            cuentaContraparte = transaccion.getCuentaDestino() != null
+                ? transaccion.getCuentaDestino().getValor() : null;
+        }
+
         return new MovimientoDTO(
-            transaccion.getId().getValor(), 
-            transaccion.getTipo().name(), 
-            transaccion.getFechaCreacion(), 
-            transaccion.getMonto().getMonto(), 
-            transaccion.getDescripcion(), 
-            transaccion.getReferencia(), 
-            transaccion.getCuentaOrigen() != null ? transaccion.getCuentaOrigen().getValor() : null, 
-            null);
+            transaccion.getId().getValor(),
+            transaccion.getTipo().name(),
+            transaccion.getFechaCreacion(),
+            transaccion.getMonto().getMonto(),
+            transaccion.getDescripcion(),
+            transaccion.getReferencia(),
+            cuentaContraparte,
+            transaccion.getSaldoPosterior());
     }
 
 

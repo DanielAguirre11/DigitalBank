@@ -83,12 +83,12 @@ class ClienteRepositoryJpaTest {
             when(clienteMapper.aDominio(clienteEntity)).thenReturn(cliente);
 
            
-            Cliente resultado = repository.buscarPorId(clienteIdString);
+            Optional<Cliente> resultado = repository.buscarPorId(clienteIdString);
 
-           
-            assertThat(resultado).isNotNull();
-            assertThat(resultado.getClienteId().getValor()).isEqualTo(clienteIdString);
-            assertThat(resultado.getNombre()).isEqualTo("Juan Pérez");
+
+            assertThat(resultado).isPresent();
+            assertThat(resultado.get().getClienteId().getValor()).isEqualTo(clienteIdString);
+            assertThat(resultado.get().getNombre()).isEqualTo("Juan Pérez");
 
             verify(jpaRepository, times(1)).findByClienteId(clienteIdString);
             verify(clienteMapper, times(1)).aDominio(clienteEntity);
@@ -102,10 +102,10 @@ class ClienteRepositoryJpaTest {
                 .thenReturn(Optional.empty());
 
             
-            Cliente resultado = repository.buscarPorId(clienteIdString);
+            Optional<Cliente> resultado = repository.buscarPorId(clienteIdString);
 
-            
-            assertThat(resultado).isNull();
+
+            assertThat(resultado).isEmpty();
             verify(jpaRepository, times(1)).findByClienteId(clienteIdString);
             verify(clienteMapper, never()).aDominio(any());
         }
@@ -114,10 +114,10 @@ class ClienteRepositoryJpaTest {
         @DisplayName("Debería manejar ID null")
         void buscarPorId_IdNull_RetornaNull() {
             
-            Cliente resultado = repository.buscarPorId(null);
+            Optional<Cliente> resultado = repository.buscarPorId(null);
 
-            
-            assertThat(resultado).isNull();
+
+            assertThat(resultado).isEmpty();
             verify(clienteMapper, never()).aDominio(any());
             
         }

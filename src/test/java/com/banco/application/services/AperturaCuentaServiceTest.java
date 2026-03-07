@@ -107,7 +107,7 @@ class AperturaCuentaServiceTest {
 
 
         //CONFIGURACION MOCK
-        when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(cliente);
+        when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(cliente));
 
 
     }
@@ -132,7 +132,7 @@ class AperturaCuentaServiceTest {
             assertThat(response.getTipoCuenta()).isEqualTo("CORRIENTE");
             assertThat(response.getMoneda()).isEqualTo("ARG");
             assertThat(response.getMensaje()).contains("creada exitosamente");
-            assertThat(response.getSaldoInicial()).isEqualTo("1000.00");
+            assertThat(response.getSaldoInicial()).isEqualByComparingTo(new BigDecimal("1000.00"));
 
 
             verify(clienteRepository,times(1)).buscarPorId(clienteId.getValor());
@@ -235,95 +235,76 @@ class AperturaCuentaServiceTest {
         
         @Test
         @DisplayName(" Debería fallar cuando request es nulo")
-        void ejecutarAperturaCuenta_RequestNulo_RespuestaError() {
-            
-            AperturaCuentaResponse response = aperturaCuentaService.ejecutarAperturaCuenta(null);
-            
-            
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertThat(response.getMensaje()).contains("La solicitud no puede ser nula");
-            
+        void ejecutarAperturaCuenta_RequestNulo_LanzaExcepcion() {
+
+            assertThatThrownBy(() -> aperturaCuentaService.ejecutarAperturaCuenta(null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("La solicitud no puede ser nula");
+
             verify(clienteRepository, never()).buscarPorId(anyString());
         }
-        
+
         @Test
         @DisplayName("Debería fallar cuando clienteId es nulo")
-        void ejecutarAperturaCuenta_ClienteIdNulo_RespuestaError() {
-            
+        void ejecutarAperturaCuenta_ClienteIdNulo_LanzaExcepcion() {
+
             AperturaCuentaRequest requestInvalido = new AperturaCuentaRequest(
                 null, "CORRIENTE", "ARG", new BigDecimal("1000.00"), "001"
             );
-            
-            
-            AperturaCuentaResponse response = aperturaCuentaService.ejecutarAperturaCuenta(requestInvalido);
-            
-            
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertThat(response.getMensaje()).contains("Se necesita id del cliente");
-            
+
+            assertThatThrownBy(() -> aperturaCuentaService.ejecutarAperturaCuenta(requestInvalido))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Se necesita id del cliente");
+
             verify(clienteRepository, never()).buscarPorId(any(String.class));
         }
-        
+
         @Test
         @DisplayName(" Debería fallar cuando moneda es nula")
-        void ejecutarAperturaCuenta_MonedaNula_RespuestaError() {
-            // Given
+        void ejecutarAperturaCuenta_MonedaNula_LanzaExcepcion() {
+
             AperturaCuentaRequest requestInvalido = new AperturaCuentaRequest(
                 clienteId.getValor(), "CORRIENTE", null, new BigDecimal("1000.00"), "001"
             );
-            
-            // When
-            AperturaCuentaResponse response = aperturaCuentaService.ejecutarAperturaCuenta(requestInvalido);
-            
-            // Then
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertThat(response.getMensaje()).contains(" Se requiere moneda");
-            
+
+            assertThatThrownBy(() -> aperturaCuentaService.ejecutarAperturaCuenta(requestInvalido))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Se requiere moneda");
+
             verify(clienteRepository, never()).buscarPorId(any(String.class));
         }
-        
+
         @Test
         @DisplayName(" Debería fallar cuando tipoCuenta es nulo")
-        void ejecutarAperturaCuenta_TipoCuentaNulo_RespuestaError() {
-            
+        void ejecutarAperturaCuenta_TipoCuentaNulo_LanzaExcepcion() {
+
             AperturaCuentaRequest requestInvalido = new AperturaCuentaRequest(
                 clienteId.getValor(), null, "ARG", new BigDecimal("1000.00"), "001"
             );
-            
-            
-            AperturaCuentaResponse response = aperturaCuentaService.ejecutarAperturaCuenta(requestInvalido);
-            
-            
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertThat(response.getMensaje()).contains(" Se requiere tipo de cuenta");
-            
+
+            assertThatThrownBy(() -> aperturaCuentaService.ejecutarAperturaCuenta(requestInvalido))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Se requiere tipo de cuenta");
+
             verify(clienteRepository, never()).buscarPorId(anyString());
         }
-        
+
         @Test
         @DisplayName("Debería fallar cuando saldo inicial es negativo")
-        void ejecutarAperturaCuenta_SaldoInicialNegativo_RespuestaError() {
-            // Given
+        void ejecutarAperturaCuenta_SaldoInicialNegativo_LanzaExcepcion() {
+
             AperturaCuentaRequest requestInvalido = new AperturaCuentaRequest(
                 clienteId.getValor(),
                 "CORRIENTE",
                 "ARG",
-                new BigDecimal("-500.00"), // Saldo negativo
+                new BigDecimal("-500.00"),
                 "001"
             );
-            
-            
-            AperturaCuentaResponse response = aperturaCuentaService.ejecutarAperturaCuenta(requestInvalido);
-            
-            
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertThat(response.getMensaje()).contains(" El saldo inicial no puede ser menor a 0");
-            
+
+            assertThatThrownBy(() -> aperturaCuentaService.ejecutarAperturaCuenta(requestInvalido))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("El saldo inicial no puede ser menor a 0");
+
             verify(clienteRepository, never()).buscarPorId(anyString());
         }
 
@@ -338,81 +319,69 @@ class AperturaCuentaServiceTest {
         
         @Test
         @DisplayName(" Debería fallar cuando cliente no existe")
-        void ejecutarAperturaCuenta_ClienteNoExiste_RespuestaError() {
-            
+        void ejecutarAperturaCuenta_ClienteNoExiste_LanzaExcepcion() {
+
             when(clienteRepository.buscarPorId(clienteId.getValor()))
-            .thenReturn(null);
-            
-            
-            AperturaCuentaResponse response = aperturaCuentaService.ejecutarAperturaCuenta(requestValido);
-            
-            
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertThat(response.getMensaje()).contains("is null");
-            
+            .thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> aperturaCuentaService.ejecutarAperturaCuenta(requestValido))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Cliente no encontrado o inactivo");
+
             verify(clienteRepository, times(1)).buscarPorId(clienteId.getValor());
             verify(clienteRepository, never()).actualizar(any(Cliente.class));
             verify(cuentaRepository, never()).guardar(any(Cuenta.class));
         }
-        
+
         @Test
         @DisplayName("Debería fallar cuando cliente está inactivo")
-        void ejecutarAperturaCuenta_ClienteInactivo_RespuestaError() {
-            
+        void ejecutarAperturaCuenta_ClienteInactivo_LanzaExcepcion() {
+
             Cliente clienteInactivo = new Cliente(
-                clienteId, 
-                "Juan Pérez", 
-                "juan@email.com", 
-                false, 
-                cliente.getCuentas()
+                clienteId,
+                "Juan Pérez",
+                "juan@email.com",
+                false,
+                cliente.getCuentas(), null, null
             );
-            
+
             when(clienteRepository.buscarPorId(clienteId.getValor()))
-            .thenReturn(clienteInactivo);
-            
-            
-            AperturaCuentaResponse response = aperturaCuentaService.ejecutarAperturaCuenta(requestValido);
-            
-            
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertThat(response.getMensaje()).contains("inactivo");
-            
+            .thenReturn(Optional.of(clienteInactivo));
+
+            assertThatThrownBy(() -> aperturaCuentaService.ejecutarAperturaCuenta(requestValido))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("inactivo");
+
             verify(clienteRepository, times(1)).buscarPorId(clienteId.getValor());
             verify(clienteRepository, never()).actualizar(any(Cliente.class));
             verify(cuentaRepository, never()).guardar(any(Cuenta.class));
         }
-        
+
         @Test
         @DisplayName("Debería fallar cuando cliente ya tiene 5 cuentas")
-        void ejecutarAperturaCuenta_ClienteConMaxCuentas_RespuestaError() {
-            
+        void ejecutarAperturaCuenta_ClienteConMaxCuentas_LanzaExcepcion() {
+
             CuentaId cuenta1 = CuentaId.newCuentaId("ARG0170001000000012345000");
             CuentaId cuenta2 = CuentaId.newCuentaId("ARG0170001000000012345010");
             CuentaId cuenta3 = CuentaId.newCuentaId("ARG0170001000000012345020");
             CuentaId cuenta4 = CuentaId.newCuentaId("ARG0170001000000012345030");
             CuentaId cuenta5 = CuentaId.newCuentaId("ARG0170001000000012345040");
-            
+
             Cliente clienteCon5Cuentas = new Cliente(
                 clienteId,
                 "Juan Pérez",
                 "juan@email.com",
                 true,
-                List.of(cuenta1, cuenta2, cuenta3, cuenta4, cuenta5)
+                List.of(cuenta1, cuenta2, cuenta3, cuenta4, cuenta5), null, null
             );
-            
+
             when(clienteRepository.buscarPorId(clienteId.getValor()))
-            .thenReturn(clienteCon5Cuentas);
-            
-            
-            AperturaCuentaResponse response = aperturaCuentaService.ejecutarAperturaCuenta(requestValido);
-            
-            
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertThat(response.getMensaje()).contains("El cliente excede limite de cuentas");
-            
+            .thenReturn(Optional.of(clienteCon5Cuentas));
+
+            assertThatThrownBy(() -> aperturaCuentaService.ejecutarAperturaCuenta(requestValido))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Limite de cuentas excedido");
+
             verify(clienteRepository, times(1)).buscarPorId(clienteId.getValor());
             verify(clienteRepository, never()).actualizar(any(Cliente.class));
             verify(cuentaRepository, never()).guardar(any(Cuenta.class));
@@ -430,25 +399,20 @@ class AperturaCuentaServiceTest {
         
         @Test
         @DisplayName(" Debería fallar cuando saldo inicial es menor al mínimo")
-        void ejecutarAperturaCuenta_SaldoInicialMenorMinimo_RespuestaError() {
-            
-            
+        void ejecutarAperturaCuenta_SaldoInicialMenorMinimo_LanzaExcepcion() {
+
             AperturaCuentaRequest requestSaldoBajo = new AperturaCuentaRequest(
                 clienteId.getValor(),
                 "CORRIENTE",
                 "ARG",
-                new BigDecimal("50.00"), // Menor al mínimo de $100
+                new BigDecimal("50.00"),
                 "001"
             );
-            
-            
-            AperturaCuentaResponse response = aperturaCuentaService.ejecutarAperturaCuenta(requestSaldoBajo);
-            
-            
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertThat(response.getMensaje()).contains("Saldo inicial minimo $100");
-            
+
+            assertThatThrownBy(() -> aperturaCuentaService.ejecutarAperturaCuenta(requestSaldoBajo))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Saldo inicial minimo $100");
+
             verify(clienteRepository, times(1)).buscarPorId(clienteId.getValor());
             verify(clienteRepository, never()).actualizar(any(Cliente.class));
             verify(cuentaRepository, never()).guardar(any(Cuenta.class));
@@ -474,7 +438,7 @@ class AperturaCuentaServiceTest {
             
             assertNotNull(response);
             assertNotNull(response.getCuentaId());
-            assertThat(response.getSaldoInicial()).isEqualTo("100.00");
+            assertThat(response.getSaldoInicial()).isEqualByComparingTo(new BigDecimal("100.00"));
             
             verify(clienteRepository, times(1)).actualizar(cliente);
             verify(cuentaRepository, times(1)).guardar(any(Cuenta.class));
@@ -532,7 +496,7 @@ class AperturaCuentaServiceTest {
             // argThat - validar argumentos cuando se llama a un método mockeado
             verify(transaccionRepository).guardar(argThat(transaccion -> {
                 String id = transaccion.getId().getValor();
-                return id.matches("^TXN-\\d{4}-\\d{7}$");
+                return id.matches("^TXN-\\d{4}-[A-Z0-9]{12}$");
             }));
         }
         
@@ -673,25 +637,6 @@ class AperturaCuentaServiceTest {
 
 
         
-        @Test
-        @DisplayName("Debería crear respuesta de error correctamente")
-        void crearRespuestaError_MensajeError_ResponseConError() {
-            
-            String mensajeError = "Error de prueba";
-            
-            
-            AperturaCuentaResponse response = aperturaCuentaService.crearRespuestaError(mensajeError);
-            
-            
-            assertNotNull(response);
-            assertNull(response.getCuentaId());
-            assertNull(response.getClienteId());
-            assertNull(response.getTipoCuenta());
-            assertNull(response.getMoneda());
-            assertThat(response.getSaldoInicial()).isEqualTo(BigDecimal.ZERO);
-            assertNotNull(response.getFechaApertura());
-            assertThat(response.getMensaje()).contains("Error");
-        }
     }
 
 

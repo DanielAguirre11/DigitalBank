@@ -1,8 +1,12 @@
 package com.banco.infrastructure.persistence.entities;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -47,6 +51,14 @@ public class ClienteEntity {
     @Column(name = "maximo_cuentas_permitidas", nullable = false)
     private int maxCuentasPermitidas = 5;
 
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
 
     // CONSTRUCTOR VACIO REQUERIDO POR JPA
     public ClienteEntity(){}
@@ -83,6 +95,9 @@ public class ClienteEntity {
 
     public int getMaxCuentasPermitidas() { return maxCuentasPermitidas; }
     public void setMaxCuentasPermitidas(int maxCuentasPermitidas) { this.maxCuentasPermitidas = maxCuentasPermitidas;}
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
 
     //METODOS PERSISTENCIA

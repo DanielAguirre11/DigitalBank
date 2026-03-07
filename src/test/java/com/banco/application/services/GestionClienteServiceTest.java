@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -68,7 +69,7 @@ public class GestionClienteServiceTest {
 
         // cliente con 2 cuentas
         clienteConDosCuentas = new Cliente(
-        clienteId, "Juan Pérez", "juan@email.com", true, cuentasCliente);
+        clienteId, "Juan Pérez", "juan@email.com", true, cuentasCliente, null, null);
 
     }
 
@@ -131,25 +132,25 @@ public class GestionClienteServiceTest {
         @DisplayName("Debería buscar cliente por ID existente")
         void buscarClientePorId_ClienteExiste_RetornaCliente() {
            
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(cliente);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(cliente));
 
-            
+
             ClienteResponse response = gestionClienteService.buscarClientePorId(clienteId.getValor());
 
-            
+
             assertNotNull(response);
             assertThat(response.getClienteId()).isEqualTo(clienteId.getValor());
             assertThat(response.getNombre()).isEqualTo("Juan Pérez");
             assertThat(response.getEmail()).isEqualTo("juan@email.com");
 
-            verify(clienteRepository, times(2)).buscarPorId(anyString());
+            verify(clienteRepository, times(1)).buscarPorId(anyString());
         }
 
         @Test
         @DisplayName("Debería fallar al buscar cliente con ID inexistente")
         void buscarClientePorId_ClienteNoExiste_LanzaExcepcion() {
             
-            when(clienteRepository.buscarPorId(anyString())).thenReturn(null);
+            when(clienteRepository.buscarPorId(anyString())).thenReturn(Optional.empty());
 
             
             assertThatThrownBy(() -> gestionClienteService.buscarClientePorId("CLI-99999999"))
@@ -171,7 +172,7 @@ public class GestionClienteServiceTest {
         @DisplayName("Debería actualizar cliente exitosamente")
         void actualizarCliente_DatosValidos_ClienteActualizado() {
             
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(cliente);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(cliente));
             when(clienteRepository.existePorEmail("nuevo@email.com")).thenReturn(false);
 
             ActualizarClienteRequest request = new ActualizarClienteRequest();
@@ -186,14 +187,14 @@ public class GestionClienteServiceTest {
             assertThat(response.getNombre()).isEqualTo("Juan Carlos Pérez");
             assertThat(response.getEmail()).isEqualTo("nuevo@email.com");
 
-            verify(clienteRepository, times(1)).guardar(any(Cliente.class));
+            verify(clienteRepository, times(1)).actualizar(any(Cliente.class));
         }
 
         @Test
         @DisplayName("Debería fallar al actualizar con email ya existente")
         void actualizarCliente_EmailExistente_LanzaExcepcion() {
             
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(cliente);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(cliente));
             when(clienteRepository.existePorEmail("existente@email.com")).thenReturn(true);
 
             ActualizarClienteRequest request = new ActualizarClienteRequest();
@@ -223,13 +224,13 @@ public class GestionClienteServiceTest {
         @DisplayName("Debería desactivar cliente sin cuentas")
         void desactivarCliente_SinCuentas_ClienteDesactivado() {
             
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(cliente);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(cliente));
 
-            
+
             assertDoesNotThrow(() -> gestionClienteService.descativarCliente(clienteId.getValor()));
 
-            
-            verify(clienteRepository, times(1)).guardar(any(Cliente.class));
+
+            verify(clienteRepository, times(1)).actualizar(any(Cliente.class));
         }
 
         @Test
@@ -237,9 +238,9 @@ public class GestionClienteServiceTest {
         void desactivarCliente_ConCuentas_LanzaExcepcion() {
             // Cliente con cuentas
             Cliente clienteConCuentas = new Cliente(
-            clienteId, "Juan Pérez", "juan@email.com", true, cuentasCliente);
+            clienteId, "Juan Pérez", "juan@email.com", true, cuentasCliente, null, null);
 
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(clienteConCuentas);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(clienteConCuentas));
 
             
             assertThatThrownBy(() -> gestionClienteService.descativarCliente(clienteId.getValor()))
@@ -254,15 +255,15 @@ public class GestionClienteServiceTest {
         void activarCliente_ClienteInactivo_ClienteActivado() {
             
             Cliente clienteInactivo = new Cliente(
-            clienteId, "Juan Pérez", "juan@email.com", false, List.of());
+            clienteId, "Juan Pérez", "juan@email.com", false, List.of(), null, null);
 
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(clienteInactivo);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(clienteInactivo));
 
-            
+
             assertDoesNotThrow(() -> gestionClienteService.activarCliente(clienteId.getValor()));
 
-            
-            verify(clienteRepository, times(1)).guardar(any(Cliente.class));
+
+            verify(clienteRepository, times(1)).actualizar(any(Cliente.class));
         }
 
 
@@ -281,10 +282,10 @@ public class GestionClienteServiceTest {
             
             CuentaId nuevaCuenta = CuentaId.newCuentaId("ARG0170001000000012345020");
 
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(clienteConDosCuentas);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(clienteConDosCuentas));
 
-            
-            
+
+
             assertDoesNotThrow(() -> gestionClienteService.agregarCuentaAcliente(
                 clienteId.getValor(), nuevaCuenta.getValor()
             ));
@@ -304,19 +305,19 @@ public class GestionClienteServiceTest {
             CuentaId c5 = CuentaId.newCuentaId("ARG0170001000000012345040");
             
             Cliente clienteCon5 = new Cliente(
-                clienteId, "Juan Pérez", "juan@email.com", true, 
-                List.of(c1, c2, c3, c4, c5)
+                clienteId, "Juan Pérez", "juan@email.com", true,
+                List.of(c1, c2, c3, c4, c5), null, null
             );
-            
-            CuentaId nuevaCuenta = CuentaId.newCuentaId("ARG0170001000000012345050");
-            
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(clienteCon5);
 
-            
+            CuentaId nuevaCuenta = CuentaId.newCuentaId("ARG0170001000000012345050");
+
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(clienteCon5));
+
+
             assertThatThrownBy(() -> gestionClienteService.agregarCuentaAcliente(
                 clienteId.getValor(), nuevaCuenta.getValor()))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Limite de cuentas alcanzado");
+            .hasMessageContaining("Limite de cuentas excedido");
 
             verify(clienteRepository, never()).actualizar(any(Cliente.class));
         }
@@ -325,13 +326,13 @@ public class GestionClienteServiceTest {
         @DisplayName("Debería fallar al agregar cuenta ya existente")
         void agregarCuentaACliente_CuentaYaAsignada_LanzaExcepcion() {
             
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(clienteConDosCuentas);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(clienteConDosCuentas));
 
-            
+
             assertThatThrownBy(() -> gestionClienteService.agregarCuentaAcliente(
                 clienteId.getValor(), cuentaId1.getValor()))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("La cuenta ya esta asignada");
+            .hasMessageContaining("ya se encuentra asociada");
 
             verify(clienteRepository, never()).actualizar(any(Cliente.class));
         }
@@ -340,9 +341,9 @@ public class GestionClienteServiceTest {
         @DisplayName("Debería remover cuenta de cliente")
         void removerCuentaACliente_CuentaExistente_CuentaRemovida() {
             
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(clienteConDosCuentas);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(clienteConDosCuentas));
 
-            
+
             assertDoesNotThrow(() -> gestionClienteService.removerCuentaAcliente(
                 clienteId.getValor(), cuentaId1.getValor()
             ));
@@ -356,13 +357,13 @@ public class GestionClienteServiceTest {
         void removerCuentaACliente_CuentaNoAsignada_LanzaExcepcion() {
             // Configurar
             CuentaId cuentaNoAsignada = CuentaId.newCuentaId("ARG0170001000000012345999");
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(clienteConDosCuentas);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(clienteConDosCuentas));
 
-            
+
             assertThatThrownBy(() -> gestionClienteService.removerCuentaAcliente(
                 clienteId.getValor(), cuentaNoAsignada.getValor()))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("La cuenta no está asignada a este cliente");
+            .hasMessageContaining("no se ecuentra asociada");
 
             verify(clienteRepository, never()).actualizar(any(Cliente.class));
         }
@@ -381,7 +382,8 @@ public class GestionClienteServiceTest {
         void convertirResponse_ClienteCompleto_ResponseCompleta() {
             
             Cliente clienteCompleto = new Cliente(
-                clienteId, "Juan Pérez", "juan@email.com", true, cuentasCliente
+                clienteId, "Juan Pérez", "juan@email.com", true, cuentasCliente,
+                java.time.LocalDateTime.now(), java.time.LocalDateTime.now()
             );
 
             
@@ -452,13 +454,13 @@ public class GestionClienteServiceTest {
             CuentaId c4 = CuentaId.newCuentaId("ARG0170001000000012345030");
             
             Cliente clienteCon4 = new Cliente(
-                clienteId, "Juan Pérez", "juan@email.com", true, 
-                List.of(c1, c2, c3, c4)
+                clienteId, "Juan Pérez", "juan@email.com", true,
+                List.of(c1, c2, c3, c4), null, null
             );
-            
+
             CuentaId nuevaCuenta = CuentaId.newCuentaId("ARG0170001000000012345040");
-            
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(clienteCon4);
+
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(clienteCon4));
 
             
             assertDoesNotThrow(() -> gestionClienteService.agregarCuentaAcliente(
@@ -468,15 +470,15 @@ public class GestionClienteServiceTest {
 
 
         @Test
-        @DisplayName("Debería validar que cuenta no esté ya agregada")
+        @DisplayName("Debería validar que cuenta no esté ya agregada via agregarCuentaAcliente")
         void validarCuentaAgregada_CuentaYaAgregada_LanzaExcepcion() {
 
-            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(clienteConDosCuentas);
+            when(clienteRepository.buscarPorId(clienteId.getValor())).thenReturn(Optional.of(clienteConDosCuentas));
 
-            assertThatThrownBy(() -> gestionClienteService.validarCuentaAgregada(
-            cuentaId1.getValor(), clienteConDosCuentas))
+            assertThatThrownBy(() -> gestionClienteService.agregarCuentaAcliente(
+                clienteId.getValor(), cuentaId1.getValor()))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("La cuenta ya esta asignada");
+            .hasMessageContaining("ya se encuentra asociada");
         }
     }
 

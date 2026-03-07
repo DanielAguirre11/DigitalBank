@@ -15,38 +15,27 @@ import com.banco.infrastructure.persistence.entities.ClienteEntity;
 @Component
 public class ClienteMapper {
     
-    //ClienteEntoty a DOMINIO
+    //ClienteEntity a DOMINIO
     public Cliente aDominio(ClienteEntity entity){
-        
+
         ClienteId clienteId = ClienteId.newCliente(entity.getClienteId());
 
-        //Cada string se convierte en un Value Object CuentaId
-        List<CuentaId> cuentaIds = entity.getCuentasIds().stream().map(
-            entitys -> CuentaId.newCuentaId(entitys)).collect(Collectors.toList());
+        List<CuentaId> cuentaIds = entity.getCuentasIds().stream()
+            .map(CuentaId::newCuentaId)
+            .collect(Collectors.toList());
 
-        // CREAMOS EL CLIENTE
-        Cliente cliente = new Cliente(clienteId, entity.getNombre(), entity.getEmail());
-
-        //  Si en BD está inactivo, llamamos al método desactivar()
-        if (!entity.isActiva()) {
-            cliente.desactivar();
-        }
-
-        //AGREGAR CUENTAS A CLIENTE
-        // Por cada cuentaId (iteracion) de la lista "cuentasIds" hace esto...
-        for (CuentaId cuentaId : cuentaIds) {
-            
-            try {
-                cliente.agregarCuenta(cuentaId);
-            } catch (Exception e) {
-                throw new IllegalArgumentException(
-                    "Ocurrio un error al intentar mapear las cuentasIdS: " + e.getMessage());
-            }
-        }
+        Cliente cliente = new Cliente(
+            clienteId,
+            entity.getNombre(),
+            entity.getEmail(),
+            entity.isActiva(),
+            cuentaIds,
+            entity.getCreatedAt(),
+            entity.getUpdatedAt()
+        );
 
         System.out.println("Cliente reconstruido desde BD: " + clienteId);
         return cliente;
-
 
     }
 

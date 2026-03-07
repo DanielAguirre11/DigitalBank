@@ -2,14 +2,12 @@ package com.banco.infrastructure.persistence.jpa;
 
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import com.banco.application.port.out.ClienteRepository;
 import com.banco.domain.model.entities.Cliente;
-
-
 import com.banco.infrastructure.persistence.entities.ClienteEntity;
 import com.banco.infrastructure.persistence.jpa.Interface.ClienteJpaRepository;
 import com.banco.infrastructure.persistence.mappers.ClienteMapper;
-import jakarta.transaction.Transactional;
 
 
 
@@ -35,22 +33,9 @@ public class ClienteRepositoryJpa implements ClienteRepository {
     // METODOS 
 
     @Override
-    public Cliente buscarPorId(String clienteId){
-        
-        String IdString = clienteId;
-        
-        Optional<ClienteEntity> entityOpt = clienteJpaRepository.findByClienteId(IdString);
-
-        if(entityOpt.isPresent()){
-            Cliente cliente = clienteMapper.aDominio(entityOpt.get());
-
-            return cliente;
-        }
-        else{
-            System.out.println(" Cliente NO encontrado: " + clienteId);
-            return null;
-        }
-
+    public Optional<Cliente> buscarPorId(String clienteId){
+        return clienteJpaRepository.findByClienteId(clienteId)
+            .map(clienteMapper::aDominio);
     }
 
     @Override
@@ -75,12 +60,14 @@ public class ClienteRepositoryJpa implements ClienteRepository {
 
     @Override
     public boolean existePorEmail(String email){
+        return clienteJpaRepository.existsByEmail(email);
+    }
 
-        boolean emailExiste = clienteJpaRepository.existsByEmail(email);
-
-        return emailExiste;
+    @Override
+    public boolean existePorEmailExcluyendo(String email, String clienteId){
+        return clienteJpaRepository.existsByEmailAndClienteIdNot(email, clienteId);
     }
 
 
-    
+
 }

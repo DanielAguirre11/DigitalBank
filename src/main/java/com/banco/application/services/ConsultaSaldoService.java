@@ -44,40 +44,31 @@ public class ConsultaSaldoService {
     // METODO PRINCIPAL
     public ConsultaSaldoResponse consultarSaldo(ConsultaSaldoRequest request) {
 
-        
-        try {
-            // 1️ VALIDACIONES BÁSICAS
-            validarRequest(request);
-            
-            // 2️ CARGAR CUENTA
-            Cuenta cuenta = cargarCuenta(request.getCuentaId());
-            
-            // 3️ CONSTRUIR RESPUESTA BASE
-            ConsultaSaldoResponse response = construirRespuestaBase(cuenta, request);
-            
-            // 4️ PROCESAR MOVIMIENTOS (si se solicitan)
-            if (request.isIncluirMovimientos()) {
-                procesarMovimientos(cuenta, request, response);
-            }
-            
-            // 5️ AGREGAR INFORMACIÓN DE ESTADO
-            agregarInformacionEstado(cuenta, response);
-            
-            // 6️CALCULAR SALDO DISPONIBLE
-            calcularSaldosDisponibles(cuenta, response);
-            
-            // 7️ MENSAJE FINAL
-            completarMensaje(response);
-            
-            System.out.println("Consulta completada para cuenta: " + request.getCuentaId());
-            return response;
-            
-        } catch (Exception e) {
+        // 1️ VALIDACIONES BÁSICAS
+        validarRequest(request);
 
-            System.err.println("Error en consulta de saldo: " + e.getMessage());
+        // 2️ CARGAR CUENTA
+        Cuenta cuenta = cargarCuenta(request.getCuentaId());
 
-            return crearRespuestaError(request != null ? request.getCuentaId() : "DESCONOCIDA", e.getMessage());
+        // 3️ CONSTRUIR RESPUESTA BASE
+        ConsultaSaldoResponse response = construirRespuestaBase(cuenta, request);
+
+        // 4️ PROCESAR MOVIMIENTOS (si se solicitan)
+        if (request.isIncluirMovimientos()) {
+            procesarMovimientos(cuenta, request, response);
         }
+
+        // 5️ AGREGAR INFORMACIÓN DE ESTADO
+        agregarInformacionEstado(cuenta, response);
+
+        // 6️CALCULAR SALDO DISPONIBLE
+        calcularSaldosDisponibles(cuenta, response);
+
+        // 7️ MENSAJE FINAL
+        completarMensaje(response);
+
+        System.out.println("Consulta completada para cuenta: " + request.getCuentaId());
+        return response;
     }
 
 

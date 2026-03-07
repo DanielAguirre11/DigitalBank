@@ -1,5 +1,6 @@
 package com.banco.domain.model.entities;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -20,6 +21,7 @@ public class Transaccion {
     private final LocalDateTime fechaDeCreacion;
     private EstadoTransaccion estado;
     private final String referencia;
+    private BigDecimal saldoPosterior;
 
 
 
@@ -79,6 +81,8 @@ public class Transaccion {
     public LocalDateTime getFechaCreacion() { return fechaDeCreacion; }
     public EstadoTransaccion getEstado() { return estado; }
     public String getReferencia() { return referencia; }
+    public BigDecimal getSaldoPosterior() { return saldoPosterior; }
+    public void setSaldoPosterior(BigDecimal saldoPosterior) { this.saldoPosterior = saldoPosterior; }
 
     //OBTENER RESUMEN PARA REPORTES
     public String getResumen() {

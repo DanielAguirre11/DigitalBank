@@ -3,6 +3,7 @@ package com.banco.domain.model.entities;
 import com.banco.domain.model.valueobjects.ClienteId;
 import com.banco.domain.model.valueobjects.CuentaId;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,10 +17,12 @@ public class Cliente {
     private final List<CuentaId> cuentas;
     private boolean activa;
     private final int maxCuentasPermitidas;
+    private final LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     // CONSTRUCTOR PRINCIPAL
     public Cliente(ClienteId clienteId, String nombre, String email){
-        
+
         // NO NULOS
         this.clienteId = Objects.requireNonNull(clienteId,"El id no puede ser nulo");
         this.nombre = Objects.requireNonNull(nombre,"El nombre no puede ser nulo");
@@ -29,20 +32,26 @@ public class Cliente {
         this.cuentas = new ArrayList<>();
         this.activa = true;
         this.maxCuentasPermitidas = 5;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
 
         System.out.println("✅ Cliente creado: " + nombre + " (" + email + ")");
 
     }
 
-        public Cliente(ClienteId clienteId, String nombre, String email, boolean activa, List<CuentaId> cuentas){
-        
+    // CONSTRUCTOR PARA RECONSTRUCCION DESDE BD
+    public Cliente(ClienteId clienteId, String nombre, String email, boolean activa, List<CuentaId> cuentas,
+            LocalDateTime createdAt, LocalDateTime updatedAt){
+
         // NO NULOS
         this.clienteId = Objects.requireNonNull(clienteId,"El id no puede ser nulo");
         this.nombre = Objects.requireNonNull(nombre,"El nombre no puede ser nulo");
         this.email = validarEmail(email);
-        this.activa = Objects.requireNonNull(activa, "Se requiere un valor");
-        this.cuentas = cuentas;
+        this.activa = activa;
+        this.cuentas = cuentas != null ? cuentas : new ArrayList<>();
         this.maxCuentasPermitidas = 5;
+        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
+        this.updatedAt = updatedAt != null ? updatedAt : LocalDateTime.now();
 
     }
 
@@ -55,6 +64,8 @@ public class Cliente {
     public boolean getActiva(){return activa;}
     public int getMaxCuentas(){return maxCuentasPermitidas;}
     public List<CuentaId> getCuentas(){return new ArrayList<>(cuentas);}
+    public LocalDateTime getCreatedAt(){return createdAt;}
+    public LocalDateTime getUpdatedAt(){return updatedAt;}
 
     public boolean verificarCuenta(CuentaId cuentaId){return cuentas.contains(cuentaId);}
     public void desactivar(){this.activa = false;}

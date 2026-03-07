@@ -109,7 +109,7 @@ public class TransaccionRepositoryJpa implements TransaccionRepository {
         String numeroCuenta = cuentaId.getValor();
 
         // Buscamos en la BD usando Spring Data JPA
-        List<TransaccionEntity> entityOpt = transaccionJpaRepository.findByCuentaOrigenId(numeroCuenta);
+        List<TransaccionEntity> entityOpt = transaccionJpaRepository.findByCuentaOrigenIdOrCuentaDestinoId(numeroCuenta, numeroCuenta);
 
         System.out.println("¿Encontrado en BD? " + entityOpt.isEmpty());
         // retornamos la cuenta convertida a DOMINIO

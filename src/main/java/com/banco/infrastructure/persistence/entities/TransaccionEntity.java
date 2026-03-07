@@ -62,6 +62,9 @@ public class TransaccionEntity {
     @Column(name = "referencia", length = 100)
     private String referencia;
 
+    @Column(name = "saldo_posterior", precision = 15, scale = 2)
+    private BigDecimal saldoPosterior;
+
     // CONTRUCTOR VACIO 
     public TransaccionEntity(){}
     // CONTRUCTOR PARA PRUEBAS
@@ -126,6 +129,9 @@ public class TransaccionEntity {
 
     public String getReferencia() { return referencia; }
     public void setReferencia(String referencia) { this.referencia = referencia;}
+
+    public BigDecimal getSaldoPosterior() { return saldoPosterior; }
+    public void setSaldoPosterior(BigDecimal saldoPosterior) { this.saldoPosterior = saldoPosterior; }
 
  
 
