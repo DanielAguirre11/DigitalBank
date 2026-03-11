@@ -17,9 +17,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
   considerNestedRepositories = true
 )
 
-// @EntityScan: Le dice a Spring dónde buscar entidades JPA
+// @EntityScan: Le dice a Spring dónde buscar entidades JPA y converters
 @EntityScan(
-    basePackages = "com.banco.infrastructure.persistence.entities" )
+    basePackages = {
+        "com.banco.infrastructure.persistence.entities",
+        "com.banco.infrastructure.persistence.converters"
+    }
+)
 
     // @EnableTransactionManagement: Habilita transacciones automáticas
 @EnableTransactionManagement
