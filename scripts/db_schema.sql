@@ -1,4 +1,5 @@
--- ============================================================
+SELECT * FROM public.clientes
+ORDER BY id ASC -- ============================================================
 -- ENUMERACIONES (TIPOS)
 -- ============================================================
 /*
@@ -284,7 +285,127 @@ CREATE TABLE financial_transaction (
 
 COMMENT ON TABLE financial_transaction IS 'Transacción financiera con monto, moneda y cuentas origen/destino';
 
+-- ============================================================
+-- TABLA: financial_transaction
+-- Especialización de transaction para transacciones financieras
+-- ============================================================
 
+-- ============================================================
+-- 1. DDL – NEW TABLE: catalog.transaction_code
+-- ============================================================
+
+CREATE TABLE catalog.transaction_code (
+    transaction_code_id     SMALLINT        GENERATED ALWAYS AS IDENTITY,
+    code                    VARCHAR(20)     NOT NULL,
+    name                    VARCHAR(100)    NOT NULL,
+    description             VARCHAR(300),
+
+    -- Classification
+    category                VARCHAR(40)     NOT NULL
+                                CHECK (category IN (
+                                    'DEPOSIT',          -- Cash / check deposits
+                                    'WITHDRAWAL',       -- Cash withdrawals
+                                    'TRANSFER',         -- Internal transfers
+                                    'PAYMENT',          -- Bill / merchant payments
+                                    'WIRE',             -- SWIFT / SEPA wires
+                                    'ACH',              -- Automated clearing house
+                                    'INTEREST',         -- Interest accrual / payment
+                                    'FEE',              -- Bank fees & commissions
+                                    'TAX',              -- Tax withholding
+                                    'REVERSAL',         -- Correction / reversal
+                                    'ADJUSTMENT',       -- Manual adjustments
+                                    'OPENING',          -- Account opening entries
+                                    'CLOSING'           -- Account closing entries
+                                )),
+
+    -- Accounting effect
+    default_entry_type      CHAR(1)         NOT NULL CHECK (default_entry_type IN ('D','C')),
+                                            -- D = normally a Debit to the customer account
+                                            -- C = normally a Credit to the customer account
+
+    -- GL mapping (suggested debit / credit accounts in Chart of Accounts)
+    gl_debit_account_code   VARCHAR(20),    -- Suggested GL debit leg
+    gl_credit_account_code  VARCHAR(20),    -- Suggested GL credit leg
+
+    -- Allowed channels
+    allowed_channels        VARCHAR(200),   -- comma-separated: ATM,WEB,APP,BRANCH,SWIFT,ACH,SYSTEM
+
+    -- Requires specific flags
+    requires_authorization  BOOLEAN         NOT NULL DEFAULT FALSE,
+    generates_tax           BOOLEAN         NOT NULL DEFAULT FALSE,
+    generates_gl_entry      BOOLEAN         NOT NULL DEFAULT TRUE,
+    reversible              BOOLEAN         NOT NULL DEFAULT TRUE,
+
+    -- Lifecycle
+    active                  BOOLEAN         NOT NULL DEFAULT TRUE,
+    effective_date          DATE            NOT NULL DEFAULT CURRENT_DATE,
+    expiry_date             DATE,
+
+    CONSTRAINT pk_transaction_code PRIMARY KEY (transaction_code_id),
+    CONSTRAINT uq_transaction_code UNIQUE (code)
+);
+
+COMMENT ON TABLE catalog.transaction_code IS
+    'Master catalog of all valid transaction codes used in accounts.transaction. '
+    'Defines accounting behavior, GL mapping, allowed channels, and authorization rules.';
+
+COMMENT ON COLUMN catalog.transaction_code.code                  IS 'Short mnemonic used in accounts.transaction.transaction_code';
+COMMENT ON COLUMN catalog.transaction_code.default_entry_type    IS 'D = Debit (reduces balance), C = Credit (increases balance) on customer account';
+COMMENT ON COLUMN catalog.transaction_code.gl_debit_account_code IS 'Recommended debit-side GL account code from chart_of_accounts';
+COMMENT ON COLUMN catalog.transaction_code.gl_credit_account_code IS 'Recommended credit-side GL account code from chart_of_accounts';
+COMMENT ON COLUMN catalog.transaction_code.allowed_channels      IS 'Comma-separated list of channels authorised to generate this code';
+
+CREATE TABLE accounts.account (
+    account_id          UUID            NOT NULL DEFAULT uuid_generate_v4(),
+    account_number      VARCHAR(30)     NOT NULL,
+    product_id          INT             NOT NULL,
+    customer_id         UUID            NOT NULL,
+    currency_id         CHAR(3)         NOT NULL,
+    available_balance   NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    ledger_balance      NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    held_balance        NUMERIC(18,2)   NOT NULL DEFAULT 0,
+    status              VARCHAR(20)     NOT NULL DEFAULT 'ACTIVE'
+                            CHECK (status IN ('ACTIVE','INACTIVE','BLOCKED','CLOSED','FROZEN')),
+    open_date           DATE            NOT NULL DEFAULT CURRENT_DATE,
+    close_date          DATE,
+    branch_id           INT,
+    account_officer_id  UUID,
+    overdraft_allowed   BOOLEAN         NOT NULL DEFAULT FALSE,
+    overdraft_limit     NUMERIC(18,2)   DEFAULT 0,
+    created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    CONSTRAINT pk_account PRIMARY KEY (account_id),
+    CONSTRAINT uq_account_number UNIQUE (account_number),
+    CONSTRAINT fk_acc_product FOREIGN KEY (product_id) REFERENCES products.product(product_id),
+    CONSTRAINT fk_acc_customer FOREIGN KEY (customer_id) REFERENCES cif.customer(customer_id),
+    CONSTRAINT fk_acc_currency FOREIGN KEY (currency_id) REFERENCES catalog.currency(currency_id)
+);
+CREATE TABLE accounts.transaction (
+    transaction_id      UUID            NOT NULL DEFAULT uuid_generate_v4(),
+    account_id          UUID            NOT NULL,
+    transaction_date    TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    value_date          DATE            NOT NULL,
+    transaction_type    VARCHAR(10)     NOT NULL CHECK (transaction_type IN ('DEBIT','CREDIT')),
+    transaction_code_id SMALLINT		NOT NULL,
+    amount              NUMERIC(18,2)   NOT NULL,
+    balance_before      NUMERIC(18,2)   NOT NULL,
+    balance_after       NUMERIC(18,2)   NOT NULL,
+    external_reference  VARCHAR(100),
+    channel             VARCHAR(30),    -- ATM, WEB, APP, BRANCH, SWIFT
+    user_id             VARCHAR(50),
+    reversed            BOOLEAN         NOT NULL DEFAULT FALSE,
+    original_txn_id     UUID,           -- For reversals
+    CONSTRAINT pk_transaction PRIMARY KEY (transaction_id),
+    CONSTRAINT fk_txn_account FOREIGN KEY (account_id) REFERENCES accounts.account(account_id)
+	CONSTRAINT fk_txn_code FOREIGN KEY (transaction_code_id) REFERENCES catalog.transaction_code (transaction_code_id)
+);
+
+-- Accounts
+CREATE INDEX IF NOT EXISTS idx_account_customer   ON accounts.account(customer_id, status);
+CREATE INDEX IF NOT EXISTS idx_txn_account        ON accounts.transaction(account_id, transaction_date DESC);
+CREATE INDEX IF NOT EXISTS idx_txn_value_date     ON accounts.transaction(value_date);
+CREATE INDEX IF NOT EXISTS idx_txn_code			  ON accounts.transaction (transaction_code_id);
+	
 -- ============================================================
 -- ÍNDICES para mejorar performance
 -- ============================================================
